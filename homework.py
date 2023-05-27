@@ -19,7 +19,7 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_PERIOD = 60
+RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -96,9 +96,12 @@ def parse_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
 
-    if not (homework_name or status):
-        raise KeyError('В ответе нет ключей имени или статуса работы')
+    if not (homework_name):
+        raise KeyError('В ответе нет ключа имени')
 
+    if not (status):
+        raise KeyError('В ответе нет статуса работы')
+    
     if status not in HOMEWORK_VERDICTS:
         raise StatusError('Статус работы является некорректным')
 
