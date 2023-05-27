@@ -101,7 +101,7 @@ def parse_status(homework):
 
     if not (status):
         raise KeyError('В ответе нет статуса работы')
-    
+
     if status not in HOMEWORK_VERDICTS:
         raise StatusError('Статус работы является некорректным')
 
