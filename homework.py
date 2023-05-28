@@ -1,9 +1,8 @@
 import logging
 import os
+import requests
 import sys
 import time
-
-import requests
 
 from dotenv import load_dotenv
 from http import HTTPStatus
@@ -53,24 +52,19 @@ def send_message(bot, message):
 
 def get_api_answer(timestamp):
     """Запрос к эндпойнту возвращается ответ API в формате JSON."""
-    try:
-        homework_statuses = requests.get(
-            ENDPOINT,
-            headers=HEADERS,
-            params={'from_date': timestamp}
-        )
+    homework_statuses = requests.get(
+        ENDPOINT,
+        headers=HEADERS,
+        params={'from_date': timestamp}
+    )
 
-        if homework_statuses.status_code != HTTPStatus.OK:
-            raise ResponseError('Ошибка при запросе сервиса Практикум.Домашка')
+    if homework_statuses.status_code != HTTPStatus.OK:
+        raise ResponseError('Ошибка при запросе сервиса Практикум.Домашка')
 
-        if homework_statuses.status_code == HTTPStatus.NOT_FOUND:
-            raise EndpointError('Эндпойнт недоступен')
+    if homework_statuses.status_code == HTTPStatus.NOT_FOUND:
+        raise EndpointError('Эндпойнт недоступен')
 
-        print(homework_statuses.json())
-        return homework_statuses.json()
-
-    except requests.exceptions.RequestException as error:
-        raise ResponseError(f'Произошел сбой при обращении к серверу: {error}')
+    return homework_statuses.json()
 
 
 def check_response(response):
@@ -96,10 +90,10 @@ def parse_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
 
-    if not (homework_name):
+    if not homework_name:
         raise KeyError('В ответе нет ключа имени')
 
-    if not (status):
+    if not status:
         raise KeyError('В ответе нет статуса работы')
 
     if status not in HOMEWORK_VERDICTS:
@@ -132,7 +126,9 @@ def main():
         except RequestError as error:
             logger.error(error)
             message = f'Сбой в работе программы: {error}'
-            send_message(bot, message)
+            if message != prev_message:
+                send_message(bot, message)
+                prev_message = message
 
         finally:
             time.sleep(RETRY_PERIOD)
