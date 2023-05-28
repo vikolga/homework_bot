@@ -52,19 +52,24 @@ def send_message(bot, message):
 
 def get_api_answer(timestamp):
     """Запрос к эндпойнту возвращается ответ API в формате JSON."""
-    homework_statuses = requests.get(
-        ENDPOINT,
-        headers=HEADERS,
-        params={'from_date': timestamp}
-    )
+    logger.info('Отправляем запрос к API')
+    try:
+        homework_statuses = requests.get(
+            ENDPOINT,
+            headers=HEADERS,
+            params={'from_date': timestamp}
+        )
 
-    if homework_statuses.status_code != HTTPStatus.OK:
-        raise ResponseError('Ошибка при запросе сервиса Практикум.Домашка')
+        if homework_statuses.status_code != HTTPStatus.OK:
+            raise ResponseError('Ошибка при запросе сервиса Практикум.Домашка')
 
-    if homework_statuses.status_code == HTTPStatus.NOT_FOUND:
-        raise EndpointError('Эндпойнт недоступен')
+        if homework_statuses.status_code == HTTPStatus.NOT_FOUND:
+            raise EndpointError('Эндпойнт недоступен')
 
-    return homework_statuses.json()
+        return homework_statuses.json()
+
+    except Exception as error:
+        raise RequestError(f'Произошел сбой при обращении к серверу: {error}')
 
 
 def check_response(response):
