@@ -111,6 +111,7 @@ def main():
     bot = Bot(token=TELEGRAM_TOKEN)
     timestamp = 0
     prev_report = {}
+    prev_message = ''
     while True:
         try:
             response = get_api_answer(timestamp)
