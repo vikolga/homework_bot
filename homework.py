@@ -42,15 +42,15 @@ def check_tokens():
 
 def send_message(bot, message):
     """Отправка сообщения в чат телеграм."""
-    send_mes = False
+    check_send_mes = False
     try:
         logger.debug('В чат отправлено сообщение')
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Сообщение доставлено успешно')
-        send_mes = True
+        check_send_mes = True
     except Exception as error:
         logger.error(f'Не получилось отправить сообщение: {error}')
-    return send_mes
+    return check_send_mes
 
 
 def get_api_answer(timestamp):
@@ -62,16 +62,16 @@ def get_api_answer(timestamp):
             params={'from_date': timestamp}
         )
 
-        if homework_statuses.status_code != HTTPStatus.OK:
-            raise ResponseError('Ошибка при запросе сервиса Практикум.Домашка')
-
-        if homework_statuses.status_code == HTTPStatus.NOT_FOUND:
-            raise EndpointError('Эндпойнт недоступен')
-
-        return homework_statuses.json()
-
     except Exception as error:
         raise RequestError(f'Произошел сбой при обращении к серверу: {error}')
+
+    if homework_statuses.status_code != HTTPStatus.OK:
+        raise ResponseError('Ошибка при запросе сервиса Практикум.Домашка')
+
+    if homework_statuses.status_code == HTTPStatus.NOT_FOUND:
+        raise EndpointError('Эндпойнт недоступен')
+
+    return homework_statuses.json()
 
 
 def check_response(response):
@@ -119,7 +119,7 @@ def main():
     timestamp = 0
     prev_report = {}
     prev_message = ''
-    send_mes = False
+    check_send_mes = False
     while True:
         try:
             response = get_api_answer(timestamp)
@@ -135,7 +135,7 @@ def main():
         except RequestError as error:
             logger.error(error)
             message = f'Сбой в работе программы: {error}'
-            if message != prev_message and send_mes is True:
+            if message != prev_message and check_send_mes is True:
                 send_message(bot, message)
                 prev_message = message
 
