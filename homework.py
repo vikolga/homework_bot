@@ -4,8 +4,8 @@ import requests
 import sys
 import time
 
-from dotenv import load_dotenv
 from http import HTTPStatus
+from dotenv import load_dotenv
 from telegram import Bot
 
 from exceptions import ResponseError, EndpointError, RequestError, StatusError
@@ -42,17 +42,19 @@ def check_tokens():
 
 def send_message(bot, message):
     """Отправка сообщения в чат телеграм."""
+    send_mes = False
     try:
         logger.debug('В чат отправлено сообщение')
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Сообщение доставлено успешно')
+        send_mes = True
     except Exception as error:
         logger.error(f'Не получилось отправить сообщение: {error}')
+    return send_mes
 
 
 def get_api_answer(timestamp):
     """Запрос к эндпойнту возвращается ответ API в формате JSON."""
-    logger.info('Отправляем запрос к API')
     try:
         homework_statuses = requests.get(
             ENDPOINT,
@@ -117,6 +119,7 @@ def main():
     timestamp = 0
     prev_report = {}
     prev_message = ''
+    send_mes = False
     while True:
         try:
             response = get_api_answer(timestamp)
@@ -125,14 +128,14 @@ def main():
                 logger.info('Статус работы изменился')
                 send_message(bot, parse_status(report))
                 prev_report = report.copy()
-                timestamp = response.get("current_date")
+                timestamp = response.get('current_date')
             else:
                 logger.info('Статус работы не изменен')
 
         except RequestError as error:
             logger.error(error)
             message = f'Сбой в работе программы: {error}'
-            if message != prev_message:
+            if message != prev_message and send_mes is True:
                 send_message(bot, message)
                 prev_message = message
 
