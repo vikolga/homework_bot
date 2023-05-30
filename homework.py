@@ -48,9 +48,12 @@ def send_message(bot, message):
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Сообщение доставлено успешно')
         check_send_mes = True
+        return check_send_mes
+
+    # сразу сделать return не дает flake8 выдавая ошибку е999.
+
     except Exception as error:
         logger.error(f'Не получилось отправить сообщение: {error}')
-    return check_send_mes
 
 
 def get_api_answer(timestamp):
@@ -62,7 +65,7 @@ def get_api_answer(timestamp):
             params={'from_date': timestamp}
         )
 
-    except Exception as error:
+    except requests.RequestException as error:
         raise RequestError(f'Произошел сбой при обращении к серверу: {error}')
 
     if homework_statuses.status_code != HTTPStatus.OK:
@@ -113,7 +116,7 @@ def parse_status(homework):
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
-        logging.critical('Проверьте наличие всех переменных')
+        logger.critical('Проверьте наличие всех переменных')
         sys.exit()
     bot = Bot(token=TELEGRAM_TOKEN)
     timestamp = 0
@@ -135,9 +138,10 @@ def main():
         except RequestError as error:
             logger.error(error)
             message = f'Сбой в работе программы: {error}'
-            if message != prev_message and check_send_mes is True:
+            if message != prev_message:
                 send_message(bot, message)
-                prev_message = message
+                if check_send_mes is True:
+                    prev_message = message
 
         finally:
             time.sleep(RETRY_PERIOD)
@@ -145,6 +149,7 @@ def main():
 
 if __name__ == '__main__':
     logger.setLevel(logging.INFO)
+    logger.setLevel(logging.ERROR)
     handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
