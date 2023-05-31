@@ -42,15 +42,10 @@ def check_tokens():
 
 def send_message(bot, message):
     """Отправка сообщения в чат телеграм."""
-    check_send_mes = False
     try:
         logger.debug('В чат отправлено сообщение')
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Сообщение доставлено успешно')
-        check_send_mes = True
-        return check_send_mes
-
-    # сразу сделать return не дает flake8 выдавая ошибку е999.
 
     except Exception as error:
         logger.error(f'Не получилось отправить сообщение: {error}')
@@ -73,12 +68,12 @@ def get_api_answer(timestamp):
 
     if homework_statuses.status_code == HTTPStatus.NOT_FOUND:
         raise EndpointError('Эндпойнт недоступен')
-
     return homework_statuses.json()
 
 
 def check_response(response):
     """Проверка ответа API на соответствие документации."""
+    print(response)
     if not isinstance(response, dict):
         raise TypeError(f'Ответ не словарь. Ответ {response}')
 
@@ -127,6 +122,7 @@ def main():
         try:
             response = get_api_answer(timestamp)
             report = check_response(response)[0]
+            print(report)
             if prev_report != report:
                 logger.info('Статус работы изменился')
                 send_message(bot, parse_status(report))
@@ -135,11 +131,12 @@ def main():
             else:
                 logger.info('Статус работы не изменен')
 
-        except RequestError as error:
+        except ResponseError as error:
             logger.error(error)
             message = f'Сбой в работе программы: {error}'
             if message != prev_message:
                 send_message(bot, message)
+                check_send_mes = True
                 if check_send_mes is True:
                     prev_message = message
 
