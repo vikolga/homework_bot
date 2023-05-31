@@ -122,7 +122,6 @@ def main():
         try:
             response = get_api_answer(timestamp)
             report = check_response(response)[0]
-            print(report)
             if prev_report != report:
                 logger.info('Статус работы изменился')
                 send_message(bot, parse_status(report))
