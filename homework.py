@@ -46,6 +46,7 @@ def send_message(bot, message):
         logger.debug('В чат отправлено сообщение')
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.debug('Сообщение доставлено успешно')
+        return True
 
     except Exception as error:
         logger.error(f'Не получилось отправить сообщение: {error}')
@@ -117,7 +118,6 @@ def main():
     timestamp = 0
     prev_report = {}
     prev_message = ''
-    check_send_mes = False
     while True:
         try:
             response = get_api_answer(timestamp)
@@ -134,9 +134,7 @@ def main():
             logger.error(error)
             message = f'Сбой в работе программы: {error}'
             if message != prev_message:
-                send_message(bot, message)
-                check_send_mes = True
-                if check_send_mes is True:
+                if send_message(bot, message) is True:
                     prev_message = message
 
         finally:
